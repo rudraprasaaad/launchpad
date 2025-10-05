@@ -1,0 +1,28 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsup src/index.ts --format cjs --dts",
+    "start":  "node dist/index.js",
+    "lint": "eslint ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "bullmq": "^5.60.0",
+    "ioredis": "^5.8.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "ts-node-dev": "^2.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  }
+}
