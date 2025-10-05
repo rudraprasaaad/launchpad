@@ -20,6 +20,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@repo/logger": "workspace:*",
     "@types/node": "^22.15.3",
     "ts-node-dev": "^2.0.0",
     "tsup": "^8.5.0",
