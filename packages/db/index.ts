@@ -1,58 +1,31 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { drizzle } from "drizzle-orm/neon-http";
 import { logger } from "@repo/logger";
-
-const logLevels: Prisma.LogLevel[] = ["query", "info", "warn", "error"];
-
-type LogDefinition = {
-  emit: "event";
-  level: Prisma.LogLevel;
-}[];
-
-const prismaClientOptions: { log: LogDefinition } = {
-  log: logLevels.map((level) => ({ emit: "event", level })),
-};
+import * as schema from "./schema";
+import { neon } from "@neondatabase/serverless";
 
 class Database {
-  private static instance: PrismaClient<typeof prismaClientOptions>;
+  private static instance: ReturnType<typeof drizzle<typeof schema>>;
 
   private constructor() {}
 
-  public static getInstance(): PrismaClient<typeof prismaClientOptions> {
+  public static getInstance(): ReturnType<typeof drizzle<typeof schema>> {
     if (!Database.instance) {
-      logger.info("Initializing new PrismaClient instance...");
+      logger.info("Initializing Drizzle ORM with Neon...");
 
-      const prismaInstance = new PrismaClient(prismaClientOptions);
+      if (!process.env.DATABASE_URL) {
+        throw new Error("DATABASE_URL is not set");
+      }
 
-      this.attachEventListeners(prismaInstance);
-      Database.instance = prismaInstance;
+      const sql = neon(process.env.DATABASE_URL);
+
+      Database.instance = drizzle(sql, {
+        schema,
+        logger: process.env.NODE_ENV !== "production",
+      });
     }
     return Database.instance;
   }
-
-  private static attachEventListeners(
-    prisma: PrismaClient<typeof prismaClientOptions>
-  ): void {
-    prisma.$on("query", (e: Prisma.QueryEvent) => {
-      logger.debug(
-        { query: e.query, params: e.params, duration: `${e.duration}ms` },
-        "Prisma query"
-      );
-    });
-
-    prisma.$on("warn", (e: Prisma.LogEvent) => {
-      logger.warn({ target: e.target, message: e.message }, "Prisma warning");
-    });
-
-    prisma.$on("info", (e: Prisma.LogEvent) => {
-      logger.info({ target: e.target, message: e.message }, "Prisma info");
-    });
-
-    prisma.$on("error", (e: Prisma.LogEvent) => {
-      logger.error({ target: e.target, message: e.message }, "Prisma error");
-    });
-  }
 }
 
-export const prisma = Database.getInstance();
-
-export * from "@prisma/client";
+export const db = Database.getInstance();
+export * from "./schema";
